@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".MainActivity">
+
+
+
+    <ScrollView
+        android:id="@+id/parent_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/main_constraint_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+            <!--                android:text="Welcome to Hotel Reservation System"-->
+
+            <TextView
+                android:id="@+id/title_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="15dp"
+                android:fontFamily="sans-serif-black"
+                android:textAlignment="center"
+                android:textSize="30sp"
+                app:layout_constraintEnd_toEndOf="@id/main_constraint_layout"
+                app:layout_constraintStart_toStartOf="@id/main_constraint_layout"
+                app:layout_constraintTop_toTopOf="@id/main_constraint_layout"
+
+                />
+
+            <TextView
+                android:id="@+id/CheckIn_Text_View"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="13dp"
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-black"
+                android:gravity="start"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="@id/main_constraint_layout"
+
+                app:layout_constraintTop_toBottomOf="@id/title_text_view"/>
+
+            <DatePicker
+                android:id="@+id/CheckIn_date_picker"
+                android:layout_width="wrap_content"
+                android:theme="@style/DatePickerBlueTheme"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:layout_constraintEnd_toEndOf="@id/main_constraint_layout"
+                app:layout_constraintStart_toStartOf="@id/main_constraint_layout"
+                app:layout_constraintTop_toBottomOf="@id/CheckIn_Text_View">
+
+            </DatePicker>
+
+            <TextView
+                android:id="@+id/CheckOut_Text_View"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="13dp"
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-black"
+                android:gravity="start"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="@id/main_constraint_layout"
+
+                app:layout_constraintTop_toBottomOf="@id/CheckIn_date_picker"/>
+
+
+            <DatePicker
+                android:id="@+id/CheckOut_date_picker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:theme="@style/DatePickerBlueTheme"
+                app:layout_constraintEnd_toEndOf="@id/main_constraint_layout"
+                app:layout_constraintHorizontal_bias="0.508"
+                app:layout_constraintStart_toStartOf="@id/main_constraint_layout"
+                app:layout_constraintTop_toBottomOf="@id/CheckOut_Text_View">
+
+            </DatePicker>
+
+            <TextView
+                android:id="@+id/Number_of_Guest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="13dp"
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-black"
+                android:gravity="start"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="@id/main_constraint_layout"
+
+                app:layout_constraintTop_toBottomOf="@id/CheckOut_date_picker"/>
+
+            <EditText
+                android:id="@+id/guests_count_edit_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Guests Count"
+                android:inputType="number"
+                app:layout_constraintBottom_toBottomOf="@id/Number_of_Guest"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/Number_of_Guest"
+                app:layout_constraintTop_toTopOf="@id/Number_of_Guest" />
+
+            <TextView
+                android:id="@+id/name_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:fontFamily="sans-serif-black"
+                android:gravity="start"
+                android:textAlignment="textStart"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="@id/Number_of_Guest"
+                app:layout_constraintTop_toBottomOf="@id/Number_of_Guest" />
+
+            <EditText
+                android:id="@+id/name_edit_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:hint="Your Name"
+                app:layout_constraintBottom_toBottomOf="@id/name_text_view"
+                app:layout_constraintStart_toStartOf="@id/guests_count_edit_text"
+                app:layout_constraintTop_toTopOf="@id/name_text_view" />
+
+            <TextView
+                android:id="@+id/search_confirm_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginRight="10dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@id/Number_of_Guest"
+                app:layout_constraintTop_toBottomOf="@id/name_text_view" />
+
+            <Button
+                android:id="@+id/confirm_my_search_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="CONFIRM MY SEARCH"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/search_confirm_text_view" />
+
+            <Button
+                android:id="@+id/search_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="SEARCH"
+                app:layout_constraintEnd_toStartOf="@id/clear_button"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/confirm_my_search_button" />
+
+            <Button
+                android:id="@+id/clear_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Clear"
+                app:layout_constraintEnd_toEndOf="parent"
+
+                app:layout_constraintStart_toEndOf="@id/search_button"
+                app:layout_constraintTop_toBottomOf="@id/confirm_my_search_button" />
+
+
+            <Button
+                android:id="@+id/retrieve_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Retrieve From Shared Pref"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/clear_button" />
+
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

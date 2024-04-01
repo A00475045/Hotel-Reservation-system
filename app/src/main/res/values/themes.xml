@@ -1,0 +1,17 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.HotelReservationSystem" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <item name="android:fitsSystemWindows">true</item>
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.HotelReservationSystem" parent="Base.Theme.HotelReservationSystem" />
+    <style name="DatePickerBlueTheme" parent="Theme.AppCompat.Light.Dialog">
+
+        <item name="android:textColorPrimary">@color/black</item>
+        <item name="colorAccent">@color/blue</item>
+    </style>
+
+
+</resources>

@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Hotel-Reservation-System</string>
+    <string name="title_text_view">Welcome to Hotel Reservation System</string>
+    <string name="CheckIn_Text_View">CheckIn Date: </string>
+    <string name="CheckOut_Text_View">CheckOut Date: </string>
+    <string name="Number_of_Guest">Number of Guests: </string>
+    <string name="name_text_view">Enter Your Name: </string>
+
+</resources>
