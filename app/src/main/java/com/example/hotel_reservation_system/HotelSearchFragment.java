@@ -75,39 +75,108 @@ public class HotelSearchFragment extends Fragment {
             editTextGuestsCount1.setText("");
             EditText editTextGuestName1 = getView().findViewById(R.id.name_edit_text);
             editTextGuestName1.setText("");
+            Calendar calendar = Calendar.getInstance(); // Gets the current date and time
+            int year = calendar.get(Calendar.YEAR); // Current year
+            int month = calendar.get(Calendar.MONTH); // Current month
+            int day = calendar.get(Calendar.DAY_OF_MONTH); // Current day of the month
+            datePickerCheckIn.updateDate(year, month, day);
+            datePickerCheckOut.updateDate(year, month, day);
+
+
         });
 
         searchButton.setOnClickListener(v -> {
 
+            if(editTextGuestsCount.getText().toString().isEmpty()  || editTextGuestName.getText().toString().isEmpty() ){
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Error")
+                        .setMessage("Please fill all the details (guest-Count and Host-name)")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        }).show();
+                return;
+            }
+            if(!editTextGuestName.getText().toString().matches("^[a-zA-Z ]+$")){
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Error")
+                        .setMessage("Host name can only have a-z,A-Z, and space ")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        }).show();
+                return;
+            }
+
             int checkInYear = datePickerCheckIn.getYear();
             int checkInMonth = datePickerCheckIn.getMonth();
             int checkInDay = datePickerCheckIn.getDayOfMonth();
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(checkInYear, checkInMonth, checkInDay);
-
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-            String checkInDate = simpleDateFormat.format(calendar.getTime());
-//            checkInDate = getDateFromCalendar(datePickerCheckIn);
+            Calendar calendar1 = Calendar.getInstance();
+            calendar1.set(checkInYear, checkInMonth, checkInDay);
+            calendar1.set(Calendar.HOUR_OF_DAY, 0); // Normalize to the start of the day
+            calendar1.set(Calendar.MINUTE, 0);
+            calendar1.set(Calendar.SECOND, 0);
+            calendar1.set(Calendar.MILLISECOND, 0);
 
             int checkOutYear = datePickerCheckOut.getYear();
             int checkOutMonth = datePickerCheckOut.getMonth();
             int checkOutDay = datePickerCheckOut.getDayOfMonth();
-            Calendar calendar1 = Calendar.getInstance();
-            calendar.set(checkOutYear, checkOutMonth, checkOutDay);
+            Calendar calendar2 = Calendar.getInstance();
+            calendar2.set(checkOutYear, checkOutMonth, checkOutDay);
+            calendar2.set(Calendar.HOUR_OF_DAY, 0); // Normalize to the start of the day
+            calendar2.set(Calendar.MINUTE, 0);
+            calendar2.set(Calendar.SECOND, 0);
+            calendar2.set(Calendar.MILLISECOND, 0);
+            // Check if checkin is before current date
+            Calendar calendar = Calendar.getInstance();
+            calendar.set(Calendar.HOUR_OF_DAY, 0); // Normalize to the start of the day
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            if(calendar1.before(calendar)){
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Error")
+                        .setMessage("CheckIn date can't be before current date!!")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        })
+                        .show();
+                return;
+            }
+            // Check if checkout is before current checkin date
+
+            if(calendar2.before(calendar1)){
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Error")
+                        .setMessage("CheckOut date can't be before the checkin date!!")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        })
+                        .show();
+                return;
+            }
+
+
+
+
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            String checkInDate = simpleDateFormat.format(calendar1.getTime());
+//            checkInDate = getDateFromCalendar(datePickerCheckIn);
+
+
 
             SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("dd-MM-yyyy");
-            String checkOutDate = simpleDateFormat.format(calendar1.getTime());
+            String checkOutDate = simpleDateFormat.format(calendar2.getTime());
 
 
 //            checkOutDate = getDateFromCalendar(datePickerCheckOut);
             //Get input of guests count
             String numberOfGuests = editTextGuestsCount.getText().toString();
+            String name = editTextGuestName.getText().toString();
 
             Bundle bundle = new Bundle();
             bundle.putString("check in date", checkInDate);
             bundle.putString("check out date", checkOutDate);
             bundle.putString("number of guests", numberOfGuests);
+            bundle.putString("name", name);
 
 
             // set Fragment class Arguments
@@ -123,6 +192,30 @@ public class HotelSearchFragment extends Fragment {
         });
 
         confirmButton.setOnClickListener(v -> {
+
+            if(editTextGuestsCount.getText().toString().isEmpty()  || editTextGuestName.getText().toString().isEmpty() ){
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Error")
+                        .setMessage("Please fill all the details (guest-Count and Host-name)")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        })
+                        .setNegativeButton("Cancel", (dialog, which) -> {
+                            Toast.makeText(getActivity(), "Details Required for next step!", Toast.LENGTH_SHORT).show();
+                        })
+                        .show();
+                return;
+            }
+            if(!editTextGuestName.getText().toString().matches("^[a-zA-Z ]+$")){
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Error")
+                        .setMessage("Host name can only have a-z,A-Z, and space ")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        }).show();
+                return;
+            }
+
             String guestsCount = editTextGuestsCount.getText().toString();
             String guestName = editTextGuestName.getText().toString();
             int checkInYear = datePickerCheckIn.getYear();
