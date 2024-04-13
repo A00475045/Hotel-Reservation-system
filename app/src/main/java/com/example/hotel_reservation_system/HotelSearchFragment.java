@@ -96,6 +96,15 @@ public class HotelSearchFragment extends Fragment {
                         }).show();
                 return;
             }
+            if(Integer.parseInt(String.valueOf(editTextGuestsCount.getText()))< 1){
+                new AlertDialog.Builder(getActivity())
+                        .setTitle("Error")
+                        .setMessage("there must be atleast 1 guest")
+                        .setPositiveButton("OK", (dialog, which) -> {
+
+                        }).show();
+                return;
+            }
             if(!editTextGuestName.getText().toString().matches("^[a-zA-Z ]+$")){
                 new AlertDialog.Builder(getActivity())
                         .setTitle("Error")
@@ -157,13 +166,13 @@ public class HotelSearchFragment extends Fragment {
 
 
 
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
             String checkInDate = simpleDateFormat.format(calendar1.getTime());
 //            checkInDate = getDateFromCalendar(datePickerCheckIn);
 
 
 
-            SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("dd-MM-yyyy");
+            SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
             String checkOutDate = simpleDateFormat.format(calendar2.getTime());
 
 

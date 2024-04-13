@@ -1,290 +1,426 @@
 package com.example.hotel_reservation_system;
 
-import static android.os.Build.VERSION_CODES.N;
-
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Locale;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HotelDetailsFragment extends Fragment {
 
     View view;
     TextView messageTextView;
+    Button cnfBokkingBtn;
+
+    ProgressBar progressBar;
+    private HotelDetailsAdaptor hotelDetailsAdaptor;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        view = inflater.inflate(R.layout.hotel_details_layout,container,false);
+        view = inflater.inflate(R.layout.hotel_details_fragment,container,false);
         return view;
     }
 //
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        List<Guest> guests = new ArrayList<>();
+
         messageTextView = view.findViewById(R.id.message_text_view);
-        messageTextView.setText("You are about to book Rooms in "+ getArguments().getString("hotel-name") + " for " + getArguments().getString("numberOfGuests") + " guests, from " + getArguments().getString("checkIn") +" to "+ getArguments().getString("checkOut"));
+        messageTextView.setText("You are about to book Rooms in " + getArguments().getString("hotel-name") + " for " + getArguments().getString("numberOfGuests") + " guests, from " + getArguments().getString("checkIn") + " to " + getArguments().getString("checkOut"));
+        progressBar = view.findViewById(R.id.progress_bar);
 
+        RecyclerView recyclerView = view.findViewById(R.id.Recycler_view);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        for (int i = 0; i < Integer.parseInt(getArguments().getString("numberOfGuests")); i++) {
+            guests.add(new Guest());
+        }
+        hotelDetailsAdaptor = new HotelDetailsAdaptor(getActivity(), Integer.parseInt(getArguments().getString("numberOfGuests")), guests);
+        recyclerView.setAdapter(hotelDetailsAdaptor);
+
+
+        cnfBokkingBtn = view.findViewById(R.id.booking_button);
+        cnfBokkingBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<Guest> updatedGuests = hotelDetailsAdaptor.getGuestList();
+                // Now you can use the updatedGuests list to save or process data
+//                saveGuestData(updatedGuests);
+                for (int i = 0; i < updatedGuests.size(); i++) {
+
+                    if (updatedGuests.get(i).getName().isEmpty() || updatedGuests.get(i).getAge() == null || updatedGuests.get(i).getPhone_number() == null || updatedGuests.get(i).getPhone_number().toString().length() < 10 || updatedGuests.get(i).getGender().isEmpty()) {
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle("All fields Necessary")
+                                .setMessage("Please make sure all the fields are filled properly, phone Number is atleast 10 digits!")
+                                .setPositiveButton("OK", (dialog, which) -> {
+
+                                }).show();
+                        return;
+                    }
+
+                    System.out.println(updatedGuests.get(i).getId() + "  " + updatedGuests.get(i).getName() + "  " + updatedGuests.get(i).getAge() + "  " + updatedGuests.get(i).getPhone_number() + "  " + updatedGuests.get(i).getGuest_of() + "  " + updatedGuests.get(i).getGender());
+                }
+                List<Guest> gg = new ArrayList<>();
+                gg.add(updatedGuests.get(0));
+//                List<Guest> gg = new ArrayList<>();
+
+//********************************************************************************************
+                DataService service = RetrofitClientInstance.getRetrofitInstance().create(DataService.class);
+                Call<List<Guest>> call = service.addGuests(gg);
+                progressBar.setVisibility(View.VISIBLE);
+
+                call.enqueue(new Callback<List<Guest>>() {
+
+                    @Override
+                    public void onResponse(Call<List<Guest>> call, Response<List<Guest>> response) {
+
+                        if (response.isSuccessful()) {
+
+
+                            List<Guest> savedGuests = response.body();
+                            gg.remove(0);
+                            gg.add(0, savedGuests.get(0));
+//                            List<Guest> gg = new ArrayList<>();
+//                            gg.add(savedGuests);
+                            for (int i = 1; i < updatedGuests.size(); i++) {
+
+                                System.out.println("---> " + savedGuests.get(0).getId());
+                                updatedGuests.get(i).setGuest_of(savedGuests.get(0).getId());
+                            }
+                            updatedGuests.remove(0);
+//                            ----------------------------------
+//                            DataService service = RetrofitClientInstance.getRetrofitInstance().create(DataService.class);
+
+
+                            Call<List<Guest>> call1 = service.addGuests(updatedGuests);
+
+                            if (updatedGuests.size() > 0) {
+                                call1.enqueue(new Callback<List<Guest>>() {
+
+                                    @Override
+                                    public void onResponse(Call<List<Guest>> call, Response<List<Guest>> response) {
+                                        System.out.println("res: " + call);
+                                        if (response.isSuccessful()) {
+                                            System.out.println("in success");
+                                            // Success! Handle the response data
+                                            List<Guest> data = response.body();
+                                            data.add(0, savedGuests.get(0));
+
+//                                        ================================
+                                            List<Booking> bookings = new ArrayList<>();
+                                            for (int i = 0; i < data.size(); i++) {
+                                                gg.add(data.get(i));
+
+//                                            System.out.println("Mubarak ho!!");
+//
+//                                            System.out.println(data.get(i).getId() +"  " +data.get(i).getName() +"  " +data.get(i).getAge() +"  " +data.get(i).getPhone_number() +"  " +data.get(i).getGuest_of() +"  " + data.get(i).getGender());
+                                            }
+//                                        ================================
+
+                                            for (int i = 0; i < gg.size(); i++) {
+                                                bookings.add(new Booking(gg.get(i).getId(), Integer.parseInt(getArguments().getString("hotel-id")), getArguments().getString("checkIn"), getArguments().getString("checkOut")));
+                                            }
+
+                                            Call<List<Booking>> call2 = service.addBookings(bookings);
+
+//                                    ==============
+                                            call2.enqueue(new Callback<List<Booking>>() {
+
+                                                @Override
+                                                public void onResponse(Call<List<Booking>> call, Response<List<Booking>> response) {
+                                                    System.out.println("res: " + call);
+                                                    if (response.isSuccessful()) {
+                                                        System.out.println("in success");
+                                                        // Success! Handle the response data
+                                                        List<Booking> data = response.body();
+                                                        progressBar.setVisibility(View.GONE);
+
+//                                                    sssssssssssssssssssssssssssssssssssssssss
+                                                        Bundle bundle = new Bundle();
+                                                        bundle.putString("hostName", gg.get(0).getName());
+                                                        bundle.putString("bookingID", data.get(0).getId().toString());
+                                                        bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                                        // set Fragment class Arguments
+                                                        SuccessFragment successFragment = new SuccessFragment();
+                                                        successFragment.setArguments(bundle);
+
+
+                                                        FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                                        fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                                        fragmentTransaction.addToBackStack(null);
+                                                        fragmentTransaction.commit();
+
+
+                                                    } else {
+                                                        System.out.println(bookings);
+                                                        progressBar.setVisibility(View.GONE);
+                                                        new AlertDialog.Builder(getActivity())
+                                                                .setTitle("Server Error/Bad request1")
+                                                                .setMessage("There was a Server Error/ Bad Request error in Booking your hotel")
+                                                                .setPositiveButton("OK", (dialog, which) -> {
+
+                                                                    Bundle bundle = new Bundle();
+                                                                    bundle.putString("hostName", gg.get(0).getName());
+                                                                    bundle.putString("bookingID", data.get(0).getId().toString());
+                                                                    bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                                                    // set Fragment class Arguments
+                                                                    SuccessFragment successFragment = new SuccessFragment();
+                                                                    successFragment.setArguments(bundle);
+
+
+                                                                    FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                                                    fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                                                    fragmentTransaction.addToBackStack(null);
+                                                                    fragmentTransaction.commit();
+
+                                                                }).show();
+
+                                                    }
+                                                }
+
+                                                @Override
+                                                public void onFailure(Call<List<Booking>> call, Throwable t) {
+                                                    progressBar.setVisibility(View.GONE);
+                                                    new AlertDialog.Builder(getActivity())
+                                                            .setTitle("Network Error2")
+                                                            .setMessage("There was an Error in Booking your hotel")
+                                                            .setPositiveButton("OK", (dialog, which) -> {
+                                                                Bundle bundle = new Bundle();
+                                                                bundle.putString("hostName", gg.get(0).getName());
+                                                                bundle.putString("bookingID", data.get(0).getId().toString());
+                                                                bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                                                // set Fragment class Arguments
+                                                                SuccessFragment successFragment = new SuccessFragment();
+                                                                successFragment.setArguments(bundle);
+
+
+                                                                FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                                                fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                                                fragmentTransaction.addToBackStack(null);
+                                                                fragmentTransaction.commit();
+                                                            }).show();
+                                                }
+                                            });
+//                                    ==============
+
+                                        } else {
+                                            progressBar.setVisibility(View.GONE);
+                                            new AlertDialog.Builder(getActivity())
+                                                    .setTitle("Server Error/Bad request1")
+                                                    .setMessage("There was a Server Error/ Bad Request error in Booking your hotel")
+                                                    .setPositiveButton("OK", (dialog, which) -> {
+                                                        Bundle bundle = new Bundle();
+                                                        bundle.putString("hostName", gg.get(0).getName());
+                                                        bundle.putString("bookingID", "23");
+                                                        bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                                        // set Fragment class Arguments
+                                                        SuccessFragment successFragment = new SuccessFragment();
+                                                        successFragment.setArguments(bundle);
+
+
+                                                        FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                                        fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                                        fragmentTransaction.addToBackStack(null);
+                                                        fragmentTransaction.commit();
+                                                    }).show();
+
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<List<Guest>> call, Throwable t) {
+                                        progressBar.setVisibility(View.GONE);
+                                        new AlertDialog.Builder(getActivity())
+                                                .setTitle("Network Error2")
+                                                .setMessage("There was an Error in Booking your hotel")
+                                                .setPositiveButton("OK", (dialog, which) -> {
+                                                    Bundle bundle = new Bundle();
+                                                    bundle.putString("hostName", gg.get(0).getName());
+                                                    bundle.putString("bookingID", "23");
+                                                    bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                                    // set Fragment class Arguments
+                                                    SuccessFragment successFragment = new SuccessFragment();
+                                                    successFragment.setArguments(bundle);
+
+
+                                                    FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                                    fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                                    fragmentTransaction.addToBackStack(null);
+                                                    fragmentTransaction.commit();
+                                                }).show();
+                                    }
+                                });
+                            } else {
+
+//                                Call to the Booking api
+                                List<Booking> bookings = new ArrayList<>();
+                                bookings.add(new Booking(gg.get(0).getId(), Integer.parseInt(getArguments().getString("hotel-id")), getArguments().getString("checkIn"), getArguments().getString("checkOut")));
+
+                                Call<List<Booking>> call2 = service.addBookings(bookings);
+                                call2.enqueue(new Callback<List<Booking>>() {
+
+                                    @Override
+                                    public void onResponse(Call<List<Booking>> call, Response<List<Booking>> response) {
+                                        System.out.println("res: " + call);
+                                        progressBar.setVisibility(View.GONE);
+                                        if (response.isSuccessful()) {
+                                            System.out.println("in success");
+                                            // Success! Handle the response data
+                                            List<Booking> data = response.body();
+
+//                                                    sssssssssssssssssssssssssssssssssssssssss
+                                            Bundle bundle = new Bundle();
+                                            bundle.putString("hostName", gg.get(0).getName());
+                                            bundle.putString("bookingID", data.get(0).getId().toString());
+                                            bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                            // set Fragment class Arguments
+                                            SuccessFragment successFragment = new SuccessFragment();
+                                            successFragment.setArguments(bundle);
+
+
+                                            FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                            fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                            fragmentTransaction.addToBackStack(null);
+                                            fragmentTransaction.commit();
+
+                                        } else {
+                                            progressBar.setVisibility(View.GONE);
+
+                                            new AlertDialog.Builder(getActivity())
+                                                    .setTitle("Server Error/Bad request1")
+                                                    .setMessage("There was a Server Error/ Bad Request error in Booking your hotel")
+                                                    .setPositiveButton("OK", (dialog, which) -> {
+                                                        Bundle bundle = new Bundle();
+                                                        bundle.putString("hostName", gg.get(0).getName());
+                                                        bundle.putString("bookingID", "23");
+                                                        bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                                        // set Fragment class Arguments
+                                                        SuccessFragment successFragment = new SuccessFragment();
+                                                        successFragment.setArguments(bundle);
+
+
+                                                        FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                                        fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                                        fragmentTransaction.addToBackStack(null);
+                                                        fragmentTransaction.commit();
+                                                    }).show();
+
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<List<Booking>> call, Throwable t) {
+                                        progressBar.setVisibility(View.GONE);
+                                        new AlertDialog.Builder(getActivity())
+                                                .setTitle("Network Error2")
+                                                .setMessage("There was an Error in Booking your hotel")
+                                                .setPositiveButton("OK", (dialog, which) -> {
+                                                    Bundle bundle = new Bundle();
+                                                    bundle.putString("hostName", gg.get(0).getName());
+                                                    bundle.putString("bookingID", "23");
+                                                    bundle.putString("hotelName", getArguments().getString("hotel-name"));
+//                                                    bundle.putString("name", name);
+
+
+                                                    // set Fragment class Arguments
+                                                    SuccessFragment successFragment = new SuccessFragment();
+                                                    successFragment.setArguments(bundle);
+
+
+                                                    FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
+
+                                                    fragmentTransaction.replace(R.id.frame_layout, successFragment);
+                                                    fragmentTransaction.addToBackStack(null);
+                                                    fragmentTransaction.commit();
+                                                }).show();
+                                    }
+                                });
+                            }
+
+//                            ----------------------------------
+                        } else {
+                            progressBar.setVisibility(View.GONE);
+
+                            new AlertDialog.Builder(getActivity())
+                                    .setTitle("Server Error/Bad request3")
+                                    .setMessage("There was a Server Error/ Bad Request error in Booking your hotel")
+                                    .setPositiveButton("OK", (dialog, which) -> {
+
+                                    }).show();
+
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<Guest>> call, Throwable t) {
+                        progressBar.setVisibility(View.GONE);
+
+                        System.out.println("in error" + t.getMessage());
+                        System.out.println("in error" + call);
+                        new AlertDialog.Builder(getActivity())
+                                .setTitle("Network Error4")
+                                .setMessage("There was an Error in Booking your hotel")
+                                .setPositiveButton("OK", (dialog, which) -> {
+
+                                }).show();
+//
+                    }
+                });
+
+//*********************************
+
+            }
+//
+
+
+        });
     }
-
-//        titleTextView = view.findViewById(R.id.title_text_view);
-//        titleTextView.setText(R.string.title_text_view);
-//        checkInTextView = view.findViewById(R.id.CheckIn_Text_View);
-//        checkInTextView.setText(R.string.CheckIn_Text_View);
-//        checkOutTextView = view.findViewById(R.id.CheckOut_Text_View);
-//        checkOutTextView.setText(R.string.CheckOut_Text_View);
-//        numOfGTextView = view.findViewById(R.id.Number_of_Guest);
-//        numOfGTextView.setText(R.string.Number_of_Guest);
-//        nameOfGTextView = view.findViewById(R.id.name_text_view);
-//        nameOfGTextView.setText(R.string.name_text_view);
-//
-//
-//        EditText editTextGuestsCount = view.findViewById(R.id.guests_count_edit_text);
-//        EditText editTextGuestName = view.findViewById(R.id.name_edit_text);
-//        DatePicker datePickerCheckIn = view.findViewById(R.id.CheckIn_date_picker);
-//        DatePicker datePickerCheckOut = view.findViewById(R.id.CheckOut_date_picker);
-//        Button confirmButton = view.findViewById(R.id.confirm_my_search_button);
-//        Button searchButton = view.findViewById(R.id.search_button);
-//        Button retrieveButton = view.findViewById(R.id.retrieve_button);
-//        Button resetButton = view.findViewById(R.id.clear_button);
-//
-//
-//
-//        resetButton.setOnClickListener(v ->{
-//
-//
-//
-//            EditText editTextGuestsCount1 = getView().findViewById(R.id.guests_count_edit_text);
-//            editTextGuestsCount1.setText("");
-//            EditText editTextGuestName1 = getView().findViewById(R.id.name_edit_text);
-//            editTextGuestName1.setText("");
-//            Calendar calendar = Calendar.getInstance(); // Gets the current date and time
-//            int year = calendar.get(Calendar.YEAR); // Current year
-//            int month = calendar.get(Calendar.MONTH); // Current month
-//            int day = calendar.get(Calendar.DAY_OF_MONTH); // Current day of the month
-//            datePickerCheckIn.updateDate(year, month, day);
-//            datePickerCheckOut.updateDate(year, month, day);
-//
-//
-//        });
-//
-//        searchButton.setOnClickListener(v -> {
-//
-//            if(editTextGuestsCount.getText().toString().isEmpty()  || editTextGuestName.getText().toString().isEmpty() ){
-//                new AlertDialog.Builder(getActivity())
-//                        .setTitle("Error")
-//                        .setMessage("Please fill all the details (guest-Count and Host-name)")
-//                        .setPositiveButton("OK", (dialog, which) -> {
-//
-//                        }).show();
-//                return;
-//            }
-//            if(!editTextGuestName.getText().toString().matches("^[a-zA-Z ]+$")){
-//                new AlertDialog.Builder(getActivity())
-//                        .setTitle("Error")
-//                        .setMessage("Host name can only have a-z,A-Z, and space ")
-//                        .setPositiveButton("OK", (dialog, which) -> {
-//
-//                        }).show();
-//                return;
-//            }
-//
-//            int checkInYear = datePickerCheckIn.getYear();
-//            int checkInMonth = datePickerCheckIn.getMonth();
-//            int checkInDay = datePickerCheckIn.getDayOfMonth();
-//            Calendar calendar1 = Calendar.getInstance();
-//            calendar1.set(checkInYear, checkInMonth, checkInDay);
-//            calendar1.set(Calendar.HOUR_OF_DAY, 0); // Normalize to the start of the day
-//            calendar1.set(Calendar.MINUTE, 0);
-//            calendar1.set(Calendar.SECOND, 0);
-//            calendar1.set(Calendar.MILLISECOND, 0);
-//
-//            int checkOutYear = datePickerCheckOut.getYear();
-//            int checkOutMonth = datePickerCheckOut.getMonth();
-//            int checkOutDay = datePickerCheckOut.getDayOfMonth();
-//            Calendar calendar2 = Calendar.getInstance();
-//            calendar2.set(checkOutYear, checkOutMonth, checkOutDay);
-//            calendar2.set(Calendar.HOUR_OF_DAY, 0); // Normalize to the start of the day
-//            calendar2.set(Calendar.MINUTE, 0);
-//            calendar2.set(Calendar.SECOND, 0);
-//            calendar2.set(Calendar.MILLISECOND, 0);
-//            // Check if checkin is before current date
-//            Calendar calendar = Calendar.getInstance();
-//            calendar.set(Calendar.HOUR_OF_DAY, 0); // Normalize to the start of the day
-//            calendar.set(Calendar.MINUTE, 0);
-//            calendar.set(Calendar.SECOND, 0);
-//            calendar.set(Calendar.MILLISECOND, 0);
-//            if(calendar1.before(calendar)){
-//                new AlertDialog.Builder(getActivity())
-//                        .setTitle("Error")
-//                        .setMessage("CheckIn date can't be before current date!!")
-//                        .setPositiveButton("OK", (dialog, which) -> {
-//
-//                        })
-//                        .show();
-//                return;
-//            }
-//            // Check if checkout is before current checkin date
-//
-//            if(calendar2.before(calendar1)){
-//                new AlertDialog.Builder(getActivity())
-//                        .setTitle("Error")
-//                        .setMessage("CheckOut date can't be before the checkin date!!")
-//                        .setPositiveButton("OK", (dialog, which) -> {
-//
-//                        })
-//                        .show();
-//                return;
-//            }
-//
-//
-//
-//
-//            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd-MM-yyyy");
-//            String checkInDate = simpleDateFormat.format(calendar1.getTime());
-////            checkInDate = getDateFromCalendar(datePickerCheckIn);
-//
-//
-//
-//            SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("dd-MM-yyyy");
-//            String checkOutDate = simpleDateFormat.format(calendar2.getTime());
-//
-//
-////            checkOutDate = getDateFromCalendar(datePickerCheckOut);
-//            //Get input of guests count
-//            String numberOfGuests = editTextGuestsCount.getText().toString();
-//            String name = editTextGuestName.getText().toString();
-//
-//            Bundle bundle = new Bundle();
-//            bundle.putString("check in date", checkInDate);
-//            bundle.putString("check out date", checkOutDate);
-//            bundle.putString("number of guests", numberOfGuests);
-//            bundle.putString("name", name);
-//
-//
-//            // set Fragment class Arguments
-//            HotelListFragment hotelsListFragment = new HotelListFragment();
-//            hotelsListFragment.setArguments(bundle);
-//
-//
-//            FragmentTransaction fragmentTransaction = getParentFragmentManager().beginTransaction();
-//
-//            fragmentTransaction.replace(R.id.frame_layout, hotelsListFragment);
-//            fragmentTransaction.addToBackStack(null);
-//            fragmentTransaction.commit();
-//        });
-//
-//        confirmButton.setOnClickListener(v -> {
-//
-//            if(editTextGuestsCount.getText().toString().isEmpty()  || editTextGuestName.getText().toString().isEmpty() ){
-//                new AlertDialog.Builder(getActivity())
-//                        .setTitle("Error")
-//                        .setMessage("Please fill all the details (guest-Count and Host-name)")
-//                        .setPositiveButton("OK", (dialog, which) -> {
-//
-//                        })
-//                        .setNegativeButton("Cancel", (dialog, which) -> {
-//                            Toast.makeText(getActivity(), "Details Required for next step!", Toast.LENGTH_SHORT).show();
-//                        })
-//                        .show();
-//                return;
-//            }
-//            if(!editTextGuestName.getText().toString().matches("^[a-zA-Z ]+$")){
-//                new AlertDialog.Builder(getActivity())
-//                        .setTitle("Error")
-//                        .setMessage("Host name can only have a-z,A-Z, and space ")
-//                        .setPositiveButton("OK", (dialog, which) -> {
-//
-//                        }).show();
-//                return;
-//            }
-//
-//            String guestsCount = editTextGuestsCount.getText().toString();
-//            String guestName = editTextGuestName.getText().toString();
-//            int checkInYear = datePickerCheckIn.getYear();
-//            int checkInMonth = datePickerCheckIn.getMonth();
-//            int checkInDay = datePickerCheckIn.getDayOfMonth();
-//            String checkInDate = checkInDay + "/" + (checkInMonth + 1) + "/" + checkInYear;
-//
-//            int checkOutYear = datePickerCheckOut.getYear();
-//            int checkOutMonth = datePickerCheckOut.getMonth();
-//            int checkOutDay = datePickerCheckOut.getDayOfMonth();
-//            String checkOutDate = checkOutDay + "/" + (checkOutMonth + 1) + "/" + checkOutYear;
-//
-//
-//            String message = "Name: " + guestName + "\nGuests: " + guestsCount + "\nCheck-In Date: " + checkInDate + "\nCheck-Out Date: " + checkOutDate;
-//
-//
-//            new AlertDialog.Builder(getActivity())
-//                    .setTitle("Reservation Details")
-//                    .setMessage(message)
-//                    .setPositiveButton("OK", (dialog, which) -> {
-//                        SharedPreferences sharedPreferences = getActivity().getSharedPreferences("MySharedPrefs", Context.MODE_PRIVATE);
-//                        SharedPreferences.Editor editor = sharedPreferences.edit();
-//
-//
-//                        editor.putString("guestsCount", guestsCount);
-//                        editor.putString("guestName", guestName);
-//                        editor.apply();
-//
-//
-//                        Toast.makeText(getActivity(), "Details Saved!", Toast.LENGTH_SHORT).show();
-//                    })
-//                    .setNegativeButton("Cancel", (dialog, which) -> {
-//
-//                    })
-//                    .show();
-//        });
-//
-//
-//
-//
-//
-//        retrieveButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//
-//                SharedPreferences sharedPreferences = getActivity().getSharedPreferences("MySharedPrefs", Context.MODE_PRIVATE);
-//                String guestsCount = sharedPreferences.getString("guestsCount", "1"); // Default to 1 if not found
-//                String guestName = sharedPreferences.getString("guestName", ""); // Default to 1 if not found
-//                EditText editTextGuestsCount = getView().findViewById(R.id.guests_count_edit_text);
-//                editTextGuestsCount.setText(guestsCount);
-//                EditText editTextGuestName = getView().findViewById(R.id.name_edit_text);
-//                editTextGuestName.setText(guestName);
-//            }
-//        });
-////
-////        searchButton = view.findViewById(R.id.search_button);
-////        searchButton.setOnClickListener(new View.OnClickListener() {
-////            @Override
-////            public void onClick(View view) {
-////
-////            }
-////        });
-////        mainLayout = view.findViewById(R.id.main_layout);
-//
-//    }
-//
-
-
 }

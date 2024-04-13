@@ -40,9 +40,9 @@ class HotelListAdapter extends RecyclerView.Adapter<HotelListAdapter.ViewHolder>
     @Override
     public void onBindViewHolder(@NonNull HotelListAdapter.ViewHolder holder, int position) {
         System.out.println();
-        String hotelName = Hotel.get(position).getHotel_name();
+        String hotelName = Hotel.get(position).getHotelName();
         String hotelPrice = String.valueOf(Hotel.get(position).getPrice()) +"$";
-        String totalRooms = "Total rooms: "+String.valueOf(Hotel.get(position).getTotal_rooms());
+        String totalRooms = "Total rooms: "+String.valueOf(Hotel.get(position).getTotalRooms());
         String hotelAddress = String.valueOf(Hotel.get(position).getAddress());
 
         // set up the text
@@ -83,7 +83,7 @@ class HotelListAdapter extends RecyclerView.Adapter<HotelListAdapter.ViewHolder>
                     if(clickListener != null){
                         int position = getAdapterPosition();
                         if(position != RecyclerView.NO_POSITION){
-                            clickListener.onItemClick(position, new Hotel(Hotel.get(position).getId(), Hotel.get(position).getHotel_name(),Hotel.get(position).getAddress(), Hotel.get(position).getRoom_types(), Hotel.get(position).getPrice(),Hotel.get(position).getTotal_rooms()), numberOfGuests);
+                            clickListener.onItemClick(position, new Hotel(Hotel.get(position).getId(), Hotel.get(position).getHotelName(),Hotel.get(position).getAddress(), Hotel.get(position).getRoomTypes(), Hotel.get(position).getPrice(),Hotel.get(position).getTotalRooms()), numberOfGuests);
                         }
                     }
                 }

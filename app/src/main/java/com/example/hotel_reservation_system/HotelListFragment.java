@@ -55,7 +55,7 @@ public class HotelListFragment extends Fragment implements ItemClickListener {
         String name = getArguments().getString("name");
         System.out.println(checkInDate + " to " + checkOutDate);
         //Set up the header
-        headingTextView.setText("Welcome "+ name +", \n hotel for " + numberOfGuests + " guest/s staying from " + checkInDate +
+        headingTextView.setText("Welcome "+ name +", \nhotel for " + numberOfGuests + " guest/s staying from " + checkInDate +
                 " to " + checkOutDate);
 
 
@@ -82,8 +82,7 @@ public class HotelListFragment extends Fragment implements ItemClickListener {
         System.out.println("in getHotelsListsData");
         progressBar.setVisibility(View.VISIBLE);
 
-        userListResponseData = initHotel();
-        setupRecyclerView();
+
         //=================
         DataService service = RetrofitClientInstance.getRetrofitInstance().create(DataService.class);
         Call<List<Hotel>> call = service.getAllObjects();
@@ -92,8 +91,9 @@ public class HotelListFragment extends Fragment implements ItemClickListener {
 
             @Override
             public void onResponse(Call<List<Hotel>> call, Response<List<Hotel>> response) {
-                System.out.println("in success");
+                System.out.println("res: " + call);
                 if (response.isSuccessful()) {
+                    System.out.println("in success");
                     // Success! Handle the response data
                     List<Hotel> data = response.body();
                     System.out.println("Log: " + data);
@@ -101,11 +101,16 @@ public class HotelListFragment extends Fragment implements ItemClickListener {
                     setupRecyclerView();
                 } else {
                     // Handle the error
+                    userListResponseData = initHotel();
+                    setupRecyclerView();
                 }
             }
             @Override
             public void onFailure(Call<List<Hotel>> call, Throwable t) {
                 System.out.println("in error"+ t.getMessage());
+                System.out.println("in error"+ call);
+                userListResponseData = initHotel();
+                setupRecyclerView();
                 // Network error or request was aborted
             }
         });
@@ -130,13 +135,13 @@ public class HotelListFragment extends Fragment implements ItemClickListener {
         Bundle bundle = new Bundle();
         bundle.putString("numberOfGuests", String.valueOf(( numberOfGuests)));
         bundle.putString("hotel-id", String.valueOf(hotel.getId()));
-        bundle.putString("hotel-name", String.valueOf(hotel.getHotel_name() ));
+        bundle.putString("hotel-name", String.valueOf(hotel.getHotelName() ));
         bundle.putString("hotel-address", String.valueOf(hotel.getAddress() ));
-        bundle.putString("room_types", String.valueOf(hotel.getRoom_types() ));
+        bundle.putString("room_types", String.valueOf(hotel.getRoomTypes() ));
         bundle.putString("price", String.valueOf(hotel.getPrice() ));
         bundle.putString("checkIn", getArguments().getString("check in date"));
         bundle.putString("checkOut", getArguments().getString("check out date"));
-        bundle.putString("total_rooms", String.valueOf(hotel.getTotal_rooms() ));
+        bundle.putString("total_rooms", String.valueOf(hotel.getTotalRooms() ));
 
 
         // set Fragment class Arguments
